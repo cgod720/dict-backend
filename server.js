@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
 const http = require('http')
+const rp = require('request-promise')
 const PORT = process.env.PORT || 5000;
 
 const app_id = "6edf648a"; // insert your APP Id
@@ -19,27 +20,26 @@ app.use(express.json());
 app.use(express.static('public'));
 
 //Oxford API request
-const options = {
-  host: 'od-api.oxforddictionaries.com',
-  port: '443',
-  path: '/api/v2/entries/en-us/' + wordId + '?fields=' + fields + '&strictMatch=' + strictMatch,
-  method: "GET",
-  headers: {
-    'app_id': app_id,
-    'app_key': app_key
-  }
-};
 
-app.get(options, (resp) => {
-    let body = '';
-    resp.on('data', (d) => {
-        body += d;
-    });
-    resp.on('end', () => {
-        let parsed = JSON.stringify(body);
 
-        console.log(parsed);
-    });
+app.get('/words', (req, res) => {
+  const requestOptions = {
+    host: 'od-api.oxforddictionaries.com',
+    port: '443',
+    path: '/api/v2/entries/en-us/' + wordId + '?fields=' + fields + '&strictMatch=' + strictMatch,
+    method: "GET",
+    headers: {
+      'app_id': app_id,
+      'app_key': app_key
+    }
+  };
+  rp(requestOptions).then(response => {
+    // console.log('API call response:', response);
+    res.json({response:response})
+  }).catch((err) => {
+    console.log('API call error:', err.message);
+    res.json({err:err})
+  });
 });
 
 
